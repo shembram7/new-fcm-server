@@ -67,7 +67,7 @@ app.post('/send-notification', async (req, res) => {
   try {
     const response = await admin.messaging().send(message);
 
-    console.log(✅ Notification Sent to topic '${targetTopic}':, response);
+    console.log(`✅ Notification Sent to topic '${targetTopic}':`, response);
 
     res.status(200).json({
       success: true,
@@ -91,3 +91,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
