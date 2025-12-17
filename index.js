@@ -13,6 +13,9 @@ app.use(bodyParser.json());
  */
 try {
   if (!admin.apps.length) {
+    // লক্ষ্য করুন: আপনি যদি লোকাল পিসিতে টেস্ট করেন এবং Environment Variable সেট না থাকে,
+    // তবে এটি এরর দিতে পারে। লোকাল টেস্টের জন্য service-account.json ফাইল ব্যবহার করা ভালো।
+    // কিন্তু Render-এ Environment Variable সেট থাকলে এই কোড ঠিক আছে।
     const serviceAccount = JSON.parse(
       process.env.FIREBASE_SERVICE_ACCOUNT
     );
@@ -35,12 +38,13 @@ app.get('/', (req, res) => {
 });
 
 /**
- * ✅ Send Notification API
+ * ✅ Send Notification API (Updated with Dynamic Topic)
  */
 app.post('/send-notification', async (req, res) => {
   console.log("📩 Request Received:", req.body);
 
-  const { title, body } = req.body;
+  // ১. অ্যাপ থেকে 'topic' রিসিভ করা হচ্ছে
+  const { title, body, topic } = req.body;
 
   if (!title || !body) {
     return res.status(400).json({
@@ -49,18 +53,21 @@ app.post('/send-notification', async (req, res) => {
     });
   }
 
+  // ২. যদি টপিক পাঠানো হয়, সেটি ব্যবহার হবে। না হলে 'all' ব্যবহার হবে।
+  const targetTopic = topic ? topic : 'all';
+
   const message = {
     notification: {
       title,
       body
     },
-    topic: 'all' // Android app-এ "all" topic subscribe থাকতে হবে
+    topic: targetTopic // ৩. এখানে ডাইনামিক টপিক বসানো হলো
   };
 
   try {
     const response = await admin.messaging().send(message);
 
-    console.log('✅ Notification Sent:', response);
+    console.log(✅ Notification Sent to topic '${targetTopic}':, response);
 
     res.status(200).json({
       success: true,
@@ -84,4 +91,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
